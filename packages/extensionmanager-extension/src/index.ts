@@ -7,7 +7,7 @@ import {
   JupyterFrontEnd,
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
-import { Dialog, showDialog, ICommandPalette } from '@jupyterlab/apputils';
+import { Dialog, showDialog, ICommandPalette, ITranslator, LanguageBundle } from '@jupyterlab/apputils';
 import { ExtensionView } from '@jupyterlab/extensionmanager';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -28,16 +28,18 @@ namespace CommandIDs {
 const plugin: JupyterFrontEndPlugin<void> = {
   id: PLUGIN_ID,
   autoStart: true,
-  requires: [ISettingRegistry],
+  requires: [ISettingRegistry, ITranslator],
   optional: [ILabShell, ILayoutRestorer, IMainMenu, ICommandPalette],
   activate: async (
     app: JupyterFrontEnd,
     registry: ISettingRegistry,
+    translator: ITranslator,
     labShell: ILabShell | null,
     restorer: ILayoutRestorer | null,
     mainMenu: IMainMenu | null,
     palette: ICommandPalette | null
   ) => {
+    const trans = translator.load("jupyterlab");
     const settings = await registry.load(plugin.id);
     let enabled = settings.composite['enabled'] === true;
 
@@ -48,7 +50,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       const v = new ExtensionView(serviceManager, settings);
       v.id = 'extensionmanager.main-view';
       v.title.icon = extensionIcon;
-      v.title.caption = 'Extension Manager';
+      v.title.caption = trans.gettext('Extension Manager');
       if (restorer) {
         restorer.add(v, v.id);
       }
@@ -67,7 +69,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         settings.changed.connect(async () => {
           enabled = settings.composite['enabled'] === true;
           if (enabled && (!view || (view && !view.isAttached))) {
-            const accepted = await Private.showWarning();
+            const accepted = await Private.showWarning(trans);
             if (!accepted) {
               void settings.set('enabled', false);
               return;
@@ -87,7 +89,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       });
 
     commands.addCommand(CommandIDs.toggle, {
-      label: 'Enable Extension Manager',
+      label: trans.gettext('Enable Extension Manager'),
       execute: () => {
         if (registry) {
           void registry.set(plugin.id, 'enabled', !enabled);
@@ -97,7 +99,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       isEnabled: () => serviceManager.builder.isAvailable
     });
 
-    const category = 'Extension Manager';
+    const category = trans.gettext('Extension Manager');
     const command = CommandIDs.toggle;
     if (palette) {
       palette.addItem({ command, category });
@@ -123,9 +125,9 @@ namespace Private {
    *
    * @returns whether the user accepted the dialog.
    */
-  export async function showWarning(): Promise<boolean> {
+  export async function showWarning(trans: LanguageBundle): Promise<boolean> {
     return showDialog({
-      title: 'Enable Extension Manager?',
+      title: trans.gettext('Enable Extension Manager?'),
       body:
         "Thanks for trying out JupyterLab's extension manager. " +
         'The JupyterLab development team is excited to have a robust ' +
@@ -134,8 +136,8 @@ namespace Private {
         'and some may introduce security risks. ' +
         'Do you want to continue?',
       buttons: [
-        Dialog.cancelButton({ label: 'Disable' }),
-        Dialog.warnButton({ label: 'Enable' })
+        Dialog.cancelButton({ label: trans.gettext('Disable') }),
+        Dialog.warnButton({ label: trans.gettext('Enable') })
       ]
     }).then(result => {
       return result.button.accept;

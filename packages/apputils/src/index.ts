@@ -20,6 +20,7 @@ export * from './styling';
 export * from './thememanager';
 export * from './tokens';
 export * from './toolbar';
+export * from './translation';
 export * from './vdom';
 export * from './widgettracker';
 export * from './windowresolver';

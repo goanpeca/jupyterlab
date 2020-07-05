@@ -89,6 +89,7 @@ def load_jupyter_server_extension(nbapp):
         extensions_handler_path, ExtensionManager, ExtensionHandler
     )
     from .handlers.error_handler import ErrorHandler
+    from .handlers.translation_handler import TranslationHandler, translations_handler_path
     from .commands import (
         DEV_DIR, HERE, ensure_app, ensure_core, ensure_dev, watch,
         watch_dev, get_app_dir, AppOptions
@@ -205,6 +206,10 @@ def load_jupyter_server_extension(nbapp):
         ext_manager = ExtensionManager(app_options=build_handler_options)
         ext_handler = (ext_url, ExtensionHandler, {'manager': ext_manager})
         handlers.append(ext_handler)
+
+        translation_url = ujoin(base_url, translations_handler_path)
+        translation_handler = (translation_url, TranslationHandler)
+        handlers.append(translation_handler)
 
     # Must add before the root server handlers to avoid shadowing.
     web_app.add_handlers('.*$', handlers)

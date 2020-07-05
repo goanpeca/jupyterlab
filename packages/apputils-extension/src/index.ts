@@ -3,6 +3,19 @@
 | Distributed under the terms of the Modified BSD License.
 |----------------------------------------------------------------------------*/
 
+import * as jed from "jed";
+
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+
+import {
+  ITranslator,
+  ITranslatorConnector,
+  LanguageBundle,
+  TranslatorConnector
+} from '@jupyterlab/apputils';
+
+// Imports for translation above
+
 import {
   ILayoutRestorer,
   IRouter,
@@ -486,6 +499,59 @@ const utilityCommands: JupyterFrontEndPlugin<void> = {
 };
 
 /**
+ * Translation plugins
+ */
+const connector: JupyterFrontEndPlugin<ITranslatorConnector> = {
+  id: '@jupyterlab/translation:connector',
+  autoStart: true,
+  provides: ITranslatorConnector,
+  activate: () => {
+    return new TranslatorConnector();
+  }
+};
+
+const translator: JupyterFrontEndPlugin<ITranslator> = {
+  id: '@jupyterlab/translation:translator',
+  autoStart: true,
+  requires: [ISettingRegistry, ITranslatorConnector],
+  provides: ITranslator,
+  activate: async (app: JupyterFrontEnd, settings: ISettingRegistry, connector: ITranslatorConnector) => {
+    let setting = await settings.load("@jupyterlab/apputils-extension:translation");
+    let currentLocale: string = setting.get('locale').composite as string;
+    let languageData = await connector.fetch({language: currentLocale});
+    let jeds: any = {}
+    const defaultEnglish = new jed.Jed({
+      "domain" : "messages",
+      "locale_data" : {
+        "messages" : {
+          "" : {
+            "domain" : "messages",
+            "lang" : "en",
+            "plural_forms" : "nplurals=2; plural=(n != 1);"
+          },
+        }
+      }
+    });
+    console.log('Language data', currentLocale)
+    console.log('Language data', languageData?.data)
+    return {
+      load: (domain: string): LanguageBundle => {
+        if (currentLocale == "en") {
+          return defaultEnglish;
+        } else {
+          if (!(domain in jeds)) {
+            jeds[domain] = new jed.Jed({"domain" : domain, "locale_data" : languageData?.data });
+            console.log({"domain" : domain, "locale_data" : languageData?.data });
+          }
+          return jeds[domain];
+        }
+      }
+    }
+  }
+}
+
+
+/**
  * Export the plugins as default.
  */
 const plugins: JupyterFrontEndPlugin<any>[] = [
@@ -499,7 +565,9 @@ const plugins: JupyterFrontEndPlugin<any>[] = [
   sessionDialogs,
   themesPlugin,
   themesPaletteMenuPlugin,
-  utilityCommands
+  utilityCommands,
+  connector,
+  translator
 ];
 export default plugins;
 

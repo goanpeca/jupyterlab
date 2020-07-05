@@ -9023,6 +9023,11 @@ iterate-value@^1.0.0:
   dependencies:
     es-get-iterator "^1.0.1"
 
+jed@~1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/jed/-/jed-1.1.1.tgz#7a549bbd9ffe1585b0cd0a191e203055bee574b4"
+  integrity sha1-elSbvZ/+FYWwzQoZHiAwVb7ldLQ=
+
 jest-changed-files@^25.2.3:
   version "25.2.3"
   resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-25.2.3.tgz#ad19deef9e47ba37efb432d2c9a67dfd97cc78af"

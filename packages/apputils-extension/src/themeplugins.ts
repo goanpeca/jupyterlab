@@ -12,6 +12,7 @@ import {
   ICommandPalette,
   ISplashScreen,
   IThemeManager,
+  ITranslator,
   ThemeManager
 } from '@jupyterlab/apputils';
 
@@ -38,14 +39,16 @@ namespace CommandIDs {
  */
 export const themesPlugin: JupyterFrontEndPlugin<IThemeManager> = {
   id: '@jupyterlab/apputils-extension:themes',
-  requires: [ISettingRegistry, JupyterFrontEnd.IPaths],
+  requires: [ISettingRegistry, JupyterFrontEnd.IPaths, ITranslator],
   optional: [ISplashScreen],
   activate: (
     app: JupyterFrontEnd,
     settings: ISettingRegistry,
     paths: JupyterFrontEnd.IPaths,
+    translator: ITranslator,
     splash: ISplashScreen | null
   ): IThemeManager => {
+    const trans = translator.load("jupyterlab");
     const host = app.shell;
     const commands = app.commands;
     const url = URLExt.join(paths.urls.base, paths.urls.themes);
@@ -101,7 +104,7 @@ export const themesPlugin: JupyterFrontEndPlugin<IThemeManager> = {
     });
 
     commands.addCommand(CommandIDs.themeScrollbars, {
-      label: 'Theme Scrollbars',
+      label: trans.gettext('Theme Scrollbars'),
       isToggled: () => manager.isToggledThemeScrollbars(),
       execute: () => manager.toggleThemeScrollbars()
     });
@@ -132,20 +135,22 @@ export const themesPlugin: JupyterFrontEndPlugin<IThemeManager> = {
  */
 export const themesPaletteMenuPlugin: JupyterFrontEndPlugin<void> = {
   id: '@jupyterlab/apputils-extension:themes-palette-menu',
-  requires: [IThemeManager],
+  requires: [IThemeManager, ITranslator],
   optional: [ICommandPalette, IMainMenu],
   activate: (
     app: JupyterFrontEnd,
     manager: IThemeManager,
+    translator: ITranslator,
     palette: ICommandPalette | null,
     mainMenu: IMainMenu | null
   ): void => {
+    const trans = translator.load("jupyterlab");
     const commands = app.commands;
 
     // If we have a main menu, add the theme manager to the settings menu.
     if (mainMenu) {
       const themeMenu = new Menu({ commands });
-      themeMenu.title.label = 'JupyterLab Theme';
+      themeMenu.title.label = trans.gettext('JupyterLab Theme');
       void app.restored.then(() => {
         const isPalette = false;
 
@@ -208,7 +213,7 @@ export const themesPaletteMenuPlugin: JupyterFrontEndPlugin<void> = {
     // If we have a command palette, add theme switching options to it.
     if (palette) {
       void app.restored.then(() => {
-        const category = 'Theme';
+        const category = trans.gettext('Theme');
         const command = CommandIDs.changeTheme;
         const isPalette = true;
 

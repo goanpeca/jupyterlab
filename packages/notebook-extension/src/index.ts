@@ -11,6 +11,8 @@ import {
   Dialog,
   ICommandPalette,
   ISessionContextDialogs,
+  ITranslator,
+  LanguageBundle,
   MainAreaWidget,
   showDialog,
   WidgetTracker,
@@ -268,7 +270,7 @@ const FORMAT_LABEL: { [k: string]: string } = {
 const trackerPlugin: JupyterFrontEndPlugin<INotebookTracker> = {
   id: '@jupyterlab/notebook-extension:tracker',
   provides: INotebookTracker,
-  requires: [INotebookWidgetFactory, IDocumentManager],
+  requires: [INotebookWidgetFactory, IDocumentManager, ITranslator],
   optional: [
     ICommandPalette,
     IFileBrowserFactory,
@@ -536,6 +538,7 @@ function activateNotebookHandler(
   app: JupyterFrontEnd,
   factory: NotebookWidgetFactory.IFactory,
   docManager: IDocumentManager,
+  translator: ITranslator,
   palette: ICommandPalette | null,
   browserFactory: IFileBrowserFactory | null,
   launcher: ILauncher | null,
@@ -544,6 +547,7 @@ function activateNotebookHandler(
   settingRegistry: ISettingRegistry | null,
   sessionDialogs: ISessionContextDialogs | null
 ): INotebookTracker {
+  let trans = translator.load("jupyterlab");
   const services = app.serviceManager;
 
   const { commands } = app;
@@ -582,10 +586,11 @@ function activateNotebookHandler(
     services,
     tracker,
     clonedOutputs,
-    sessionDialogs
+    sessionDialogs,
+    trans
   );
   if (palette) {
-    populatePalette(palette, services);
+    populatePalette(palette, services, trans);
   }
 
   let id = 0; // The ID counter for notebook panels.
@@ -676,7 +681,7 @@ function activateNotebookHandler(
 
   // Add main menu notebook menu.
   if (mainMenu) {
-    populateMenus(app, mainMenu, tracker, services, palette, sessionDialogs);
+    populateMenus(app, mainMenu, tracker, services, palette, sessionDialogs, trans);
   }
 
   // Utility function to create a new notebook.
@@ -703,11 +708,11 @@ function activateNotebookHandler(
         );
       }
       if (args['isPalette']) {
-        return 'New Notebook';
+        return trans.gettext('New Notebook');
       }
-      return 'Notebook';
+      return trans.gettext('Notebook');
     },
-    caption: 'Create a new notebook',
+    caption: trans.gettext('Create a new notebook'),
     icon: args => (args['isPalette'] ? undefined : notebookIcon),
     execute: args => {
       const cwd =
@@ -896,10 +901,10 @@ function addCommands(
   services: ServiceManager,
   tracker: NotebookTracker,
   clonedOutputs: WidgetTracker<MainAreaWidget>,
-  sessionDialogs: ISessionContextDialogs | null
+  sessionDialogs: ISessionContextDialogs | null,
+  trans: LanguageBundle
 ): void {
   const { commands, shell } = app;
-
   sessionDialogs = sessionDialogs ?? sessionContextDialogs;
 
   // Get the current widget and activate unless the args specify otherwise.
@@ -944,7 +949,7 @@ function addCommands(
   }
 
   commands.addCommand(CommandIDs.runAndAdvance, {
-    label: 'Run Selected Cells',
+    label: trans.gettext('Run Selected Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -957,7 +962,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.run, {
-    label: "Run Selected Cells and Don't Advance",
+    label: trans.gettext("Run Selected Cells and Don't Advance"),
     execute: args => {
       const current = getCurrent(args);
 
@@ -970,7 +975,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.runAndInsert, {
-    label: 'Run Selected Cells and Insert Below',
+    label: trans.gettext('Run Selected Cells and Insert Below'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -983,7 +988,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.runInConsole, {
-    label: 'Run Selected Text or Current Line in Console',
+    label: trans.gettext('Run Selected Text or Current Line in Console'),
     execute: async args => {
       // Default to not activating the notebook (thereby putting the notebook
       // into command mode)
@@ -1103,7 +1108,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.runAll, {
-    label: 'Run All Cells',
+    label: trans.gettext('Run All Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1116,7 +1121,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.runAllAbove, {
-    label: 'Run All Above Selected Cell',
+    label: trans.gettext('Run All Above Selected Cell'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1136,7 +1141,7 @@ function addCommands(
     }
   });
   commands.addCommand(CommandIDs.runAllBelow, {
-    label: 'Run Selected Cell and All Below',
+    label: trans.gettext('Run Selected Cell and All Below'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1157,7 +1162,7 @@ function addCommands(
     }
   });
   commands.addCommand(CommandIDs.renderAllMarkdown, {
-    label: 'Render All Markdown Cells',
+    label: trans.gettext('Render All Markdown Cells'),
     execute: args => {
       const current = getCurrent(args);
       if (current) {
@@ -1171,7 +1176,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.restart, {
-    label: 'Restart Kernel…',
+    label: trans.gettext('Restart Kernel…'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1182,7 +1187,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.closeAndShutdown, {
-    label: 'Close and Shut Down',
+    label: trans.gettext('Close and Shut Down'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1193,8 +1198,8 @@ function addCommands(
       const fileName = current.title.label;
 
       return showDialog({
-        title: 'Shut down the notebook?',
-        body: `Are you sure you want to close "${fileName}"?`,
+        title: trans.gettext('Shut down the notebook?'),
+        body: trans.sprintf(trans.gettext('Are you sure you want to close "%1$s"?'), fileName),
         buttons: [Dialog.cancelButton(), Dialog.warnButton()]
       }).then(result => {
         if (result.button.accept) {
@@ -1207,7 +1212,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.trust, {
-    label: () => 'Trust Notebook',
+    label: () => trans.gettext('Trust Notebook'),
     execute: args => {
       const current = getCurrent(args);
       if (current) {
@@ -1221,7 +1226,7 @@ function addCommands(
     label: args => {
       const formatLabel = args['label'] as string;
 
-      return (args['isPalette'] ? 'Export Notebook to ' : '') + formatLabel;
+      return (args['isPalette'] ? trans.gettext('Export Notebook to ') : '') + formatLabel;
     },
     execute: args => {
       const current = getCurrent(args);
@@ -1255,7 +1260,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.restartClear, {
-    label: 'Restart Kernel and Clear All Outputs…',
+    label: trans.gettext('Restart Kernel and Clear All Outputs…'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1270,7 +1275,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.restartAndRunToSelected, {
-    label: 'Restart Kernel and Run up to Selected Cell…',
+    label: trans.gettext('Restart Kernel and Run up to Selected Cell…'),
     execute: args => {
       const current = getCurrent(args);
       if (current) {
@@ -1297,7 +1302,7 @@ function addCommands(
     }
   });
   commands.addCommand(CommandIDs.restartRunAll, {
-    label: 'Restart Kernel and Run All Cells…',
+    label: trans.gettext('Restart Kernel and Run All Cells…'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1315,7 +1320,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.clearAllOutputs, {
-    label: 'Clear All Outputs',
+    label: trans.gettext('Clear All Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1326,7 +1331,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.clearOutputs, {
-    label: 'Clear Outputs',
+    label: trans.gettext('Clear Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1337,7 +1342,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.interrupt, {
-    label: 'Interrupt Kernel',
+    label: trans.gettext('Interrupt Kernel'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1354,7 +1359,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.toCode, {
-    label: 'Change to Code Cell Type',
+    label: trans.gettext('Change to Code Cell Type'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1365,7 +1370,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.toMarkdown, {
-    label: 'Change to Markdown Cell Type',
+    label: trans.gettext('Change to Markdown Cell Type'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1376,7 +1381,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.toRaw, {
-    label: 'Change to Raw Cell Type',
+    label: trans.gettext('Change to Raw Cell Type'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1387,7 +1392,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.cut, {
-    label: 'Cut Cells',
+    label: trans.gettext('Cut Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1398,7 +1403,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.copy, {
-    label: 'Copy Cells',
+    label: trans.gettext('Copy Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1409,7 +1414,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.pasteBelow, {
-    label: 'Paste Cells Below',
+    label: trans.gettext('Paste Cells Below'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1420,7 +1425,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.pasteAbove, {
-    label: 'Paste Cells Above',
+    label: trans.gettext('Paste Cells Above'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1431,7 +1436,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.pasteAndReplace, {
-    label: 'Paste Cells and Replace',
+    label: trans.gettext('Paste Cells and Replace'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1442,7 +1447,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.deleteCell, {
-    label: 'Delete Cells',
+    label: trans.gettext('Delete Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1453,7 +1458,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.split, {
-    label: 'Split Cell',
+    label: trans.gettext('Split Cell'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1464,7 +1469,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.merge, {
-    label: 'Merge Selected Cells',
+    label: trans.gettext('Merge Selected Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1475,7 +1480,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.insertAbove, {
-    label: 'Insert Cell Above',
+    label: trans.gettext('Insert Cell Above'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1486,7 +1491,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.insertBelow, {
-    label: 'Insert Cell Below',
+    label: trans.gettext('Insert Cell Below'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1497,7 +1502,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.selectAbove, {
-    label: 'Select Cell Above',
+    label: trans.gettext('Select Cell Above'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1508,7 +1513,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.selectBelow, {
-    label: 'Select Cell Below',
+    label: trans.gettext('Select Cell Below'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1519,7 +1524,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.extendAbove, {
-    label: 'Extend Selection Above',
+    label: trans.gettext('Extend Selection Above'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1530,7 +1535,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.extendTop, {
-    label: 'Extend Selection to Top',
+    label: trans.gettext('Extend Selection to Top'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1541,7 +1546,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.extendBelow, {
-    label: 'Extend Selection Below',
+    label: trans.gettext('Extend Selection Below'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1552,7 +1557,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.extendBottom, {
-    label: 'Extend Selection to Bottom',
+    label: trans.gettext('Extend Selection to Bottom'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1563,7 +1568,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.selectAll, {
-    label: 'Select All Cells',
+    label: trans.gettext('Select All Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1574,7 +1579,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.deselectAll, {
-    label: 'Deselect All Cells',
+    label: trans.gettext('Deselect All Cells'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1585,7 +1590,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.moveUp, {
-    label: 'Move Cells Up',
+    label: trans.gettext('Move Cells Up'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1596,7 +1601,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.moveDown, {
-    label: 'Move Cells Down',
+    label: trans.gettext('Move Cells Down'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1607,7 +1612,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.toggleAllLines, {
-    label: 'Toggle All Line Numbers',
+    label: trans.gettext('Toggle All Line Numbers'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1618,7 +1623,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.commandMode, {
-    label: 'Enter Command Mode',
+    label: trans.gettext('Enter Command Mode'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1629,7 +1634,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.editMode, {
-    label: 'Enter Edit Mode',
+    label: trans.gettext('Enter Edit Mode'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1640,7 +1645,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.undoCellAction, {
-    label: 'Undo Cell Operation',
+    label: trans.gettext('Undo Cell Operation'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1651,7 +1656,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.redoCellAction, {
-    label: 'Redo Cell Operation',
+    label: trans.gettext('Redo Cell Operation'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1662,7 +1667,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.changeKernel, {
-    label: 'Change Kernel…',
+    label: trans.gettext('Change Kernel…'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1673,7 +1678,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.reconnectToKernel, {
-    label: 'Reconnect To Kernel',
+    label: trans.gettext('Reconnect To Kernel'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1690,7 +1695,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.createOutputView, {
-    label: 'Create New View for Output',
+    label: trans.gettext('Create New View for Output'),
     execute: async args => {
       let cell: CodeCell | undefined;
       let current: NotebookPanel | undefined | null;
@@ -1716,7 +1721,7 @@ function addCommands(
         notebook: current,
         cell,
         index
-      });
+      }, trans);
       const widget = new MainAreaWidget({ content });
       current.context.addSibling(widget, {
         ref: current.id,
@@ -1743,7 +1748,7 @@ function addCommands(
     isEnabled: isEnabledAndSingleSelected
   });
   commands.addCommand(CommandIDs.createConsole, {
-    label: 'New Console for Notebook',
+    label: trans.gettext('New Console for Notebook'),
     execute: args => {
       const current = getCurrent({ ...args, activate: false });
 
@@ -1760,7 +1765,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.markdown1, {
-    label: 'Change to Heading 1',
+    label: trans.gettext('Change to Heading 1'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1771,7 +1776,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.markdown2, {
-    label: 'Change to Heading 2',
+    label: trans.gettext('Change to Heading 2'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1782,7 +1787,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.markdown3, {
-    label: 'Change to Heading 3',
+    label: trans.gettext('Change to Heading 3'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1793,7 +1798,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.markdown4, {
-    label: 'Change to Heading 4',
+    label: trans.gettext('Change to Heading 4'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1804,7 +1809,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.markdown5, {
-    label: 'Change to Heading 5',
+    label: trans.gettext('Change to Heading 5'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1815,7 +1820,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.markdown6, {
-    label: 'Change to Heading 6',
+    label: trans.gettext('Change to Heading 6'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1826,7 +1831,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.hideCode, {
-    label: 'Collapse Selected Code',
+    label: trans.gettext('Collapse Selected Code'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1837,7 +1842,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.showCode, {
-    label: 'Expand Selected Code',
+    label: trans.gettext('Expand Selected Code'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1848,7 +1853,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.hideAllCode, {
-    label: 'Collapse All Code',
+    label: trans.gettext('Collapse All Code'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1859,7 +1864,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.showAllCode, {
-    label: 'Expand All Code',
+    label: trans.gettext('Expand All Code'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1870,7 +1875,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.hideOutput, {
-    label: 'Collapse Selected Outputs',
+    label: trans.gettext('Collapse Selected Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1881,7 +1886,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.showOutput, {
-    label: 'Expand Selected Outputs',
+    label: trans.gettext('Expand Selected Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1892,7 +1897,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.hideAllOutputs, {
-    label: 'Collapse All Outputs',
+    label: trans.gettext('Collapse All Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1903,7 +1908,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.showAllOutputs, {
-    label: 'Expand All Outputs',
+    label: trans.gettext('Expand All Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1914,7 +1919,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.enableOutputScrolling, {
-    label: 'Enable Scrolling for Outputs',
+    label: trans.gettext('Enable Scrolling for Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1925,7 +1930,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.disableOutputScrolling, {
-    label: 'Disable Scrolling for Outputs',
+    label: trans.gettext('Disable Scrolling for Outputs'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1936,7 +1941,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.selectLastRunCell, {
-    label: 'Select current running or last run cell',
+    label: trans.gettext('Select current running or last run cell'),
     execute: args => {
       const current = getCurrent(args);
 
@@ -1947,7 +1952,7 @@ function addCommands(
     isEnabled
   });
   commands.addCommand(CommandIDs.replaceSelection, {
-    label: 'Replace Selection in Notebook Cell',
+    label: trans.gettext('Replace Selection in Notebook Cell'),
     execute: args => {
       const current = getCurrent(args);
       const text: string = (args['text'] as string) || '';
@@ -1964,9 +1969,10 @@ function addCommands(
  */
 function populatePalette(
   palette: ICommandPalette,
-  services: ServiceManager
+  services: ServiceManager,
+  trans: LanguageBundle
 ): void {
-  let category = 'Notebook Operations';
+  let category = trans.gettext('Notebook Operations');
   [
     CommandIDs.interrupt,
     CommandIDs.restart,
@@ -1998,7 +2004,7 @@ function populatePalette(
     args: { isPalette: true }
   });
 
-  category = 'Notebook Cell Operations';
+  category = trans.gettext('Notebook Cell Operations');
   [
     CommandIDs.run,
     CommandIDs.runAndAdvance,
@@ -2058,7 +2064,8 @@ function populateMenus(
   tracker: INotebookTracker,
   services: ServiceManager,
   palette: ICommandPalette | null,
-  sessionDialogs: ISessionContextDialogs | null
+  sessionDialogs: ISessionContextDialogs | null,
+  trans: LanguageBundle
 ): void {
   const { commands } = app;
 
@@ -2099,8 +2106,8 @@ function populateMenus(
     closeAndCleanup: (current: NotebookPanel) => {
       const fileName = current.title.label;
       return showDialog({
-        title: 'Shut down the notebook?',
-        body: `Are you sure you want to close "${fileName}"?`,
+        title: trans.gettext('Shut down the notebook?'),
+        body: trans.sprintf(trans.gettext('Are you sure you want to close "%1$s"?'), fileName),
         buttons: [Dialog.cancelButton(), Dialog.warnButton()]
       }).then(result => {
         if (result.button.accept) {
@@ -2114,7 +2121,7 @@ function populateMenus(
 
   // Add a notebook group to the File menu.
   const exportTo = new Menu({ commands });
-  exportTo.title.label = 'Export Notebook As…';
+  exportTo.title.label = trans.gettext('Export Notebook As…');
   void services.nbconvert.getExportFormats().then(response => {
     if (response) {
       // Convert export list to palette and menu items.
@@ -2133,7 +2140,7 @@ function populateMenus(
             args: args
           });
           if (palette) {
-            const category = 'Notebook Operations';
+            const category = trans.gettext('Notebook Operations');
             palette.addItem({
               command: CommandIDs.exportToFormat,
               category,
@@ -2159,7 +2166,7 @@ function populateMenus(
       }
       return Promise.resolve(void 0);
     },
-    noun: 'All Outputs',
+    noun: trans.gettext('All Outputs'),
     restartKernel: current => sessionDialogs!.restart(current.sessionContext),
     restartKernelAndClear: current => {
       return sessionDialogs!.restart(current.sessionContext).then(restarted => {
@@ -2177,7 +2184,7 @@ function populateMenus(
   // Add a console creator the the Kernel menu
   mainMenu.fileMenu.consoleCreators.add({
     tracker,
-    name: 'Notebook',
+    name: trans.gettext('Notebook'),
     createConsole: current => Private.createConsole(commands, current, true)
   } as IFileMenu.IConsoleCreator<NotebookPanel>);
 
@@ -2221,7 +2228,7 @@ function populateMenus(
   // Add an ICodeRunner to the application run menu
   mainMenu.runMenu.codeRunners.add({
     tracker,
-    noun: 'Cells',
+    noun: trans.gettext('Cells'),
     run: current => {
       const { context, content } = current;
       return NotebookActions.runAndAdvance(
@@ -2349,17 +2356,17 @@ namespace Private {
    * A widget hosting a cloned output area.
    */
   export class ClonedOutputArea extends Panel {
-    constructor(options: ClonedOutputArea.IOptions) {
+    constructor(options: ClonedOutputArea.IOptions, trans: LanguageBundle) {
       super();
       this._notebook = options.notebook;
       this._index = options.index !== undefined ? options.index : -1;
       this._cell = options.cell || null;
       this.id = `LinkedOutputView-${UUID.uuid4()}`;
-      this.title.label = 'Output View';
+      this.title.label = trans.gettext('Output View');
       this.title.icon = notebookIcon;
       this.title.caption = this._notebook.title.label
-        ? `For Notebook: ${this._notebook.title.label}`
-        : 'For Notebook:';
+        ? trans.sprintf(trans.gettext('For Notebook: %1$s'), this._notebook.title.label)
+        : trans.gettext('For Notebook:');
       this.addClass('jp-LinkedOutputView');
 
       // Wait for the notebook to be loaded before

@@ -11,6 +11,7 @@ import {
   Dialog,
   ICommandPalette,
   IFrame,
+  ITranslator,
   MainAreaWidget,
   showDialog,
   WidgetTracker
@@ -92,7 +93,7 @@ RESOURCES.sort((a: any, b: any) => {
 const plugin: JupyterFrontEndPlugin<void> = {
   activate,
   id: '@jupyterlab/help-extension:plugin',
-  requires: [IMainMenu],
+  requires: [IMainMenu, ITranslator],
   optional: [ICommandPalette, ILayoutRestorer, IInspector],
   autoStart: true
 };
@@ -112,12 +113,14 @@ export default plugin;
 function activate(
   app: JupyterFrontEnd,
   mainMenu: IMainMenu,
+  translator: ITranslator,
   palette: ICommandPalette | null,
   restorer: ILayoutRestorer | null,
   inspector: IInspector | null
 ): void {
+  const trans = translator.load("jupyterlab")
   let counter = 0;
-  const category = 'Help';
+  const category = trans.gettext('Help');
   const namespace = 'help-doc';
   const baseUrl = PageConfig.getBaseUrl();
   const { commands, shell, serviceManager } = app;
@@ -288,7 +291,7 @@ function activate(
   });
 
   commands.addCommand(CommandIDs.about, {
-    label: `About ${app.name}`,
+    label: trans.sprintf(trans.gettext("About %1$s"), app.name),
     execute: () => {
       // Create the header of the about dialog
       const versionNumber = `Version ${app.version}`;
@@ -380,7 +383,7 @@ function activate(
   });
 
   commands.addCommand(CommandIDs.launchClassic, {
-    label: 'Launch Classic Notebook',
+    label: trans.gettext('Launch Classic Notebook'),
     execute: () => {
       window.open(PageConfig.getBaseUrl() + 'tree');
     }

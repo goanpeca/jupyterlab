@@ -10,9 +10,11 @@ import {
 
 import {
   Dialog,
+  // LanguageBundle,
+  ICommandPalette,
   ISessionContext,
   ISessionContextDialogs,
-  ICommandPalette,
+  ITranslator,
   sessionContextDialogs,
   showDialog,
   WidgetTracker
@@ -106,7 +108,8 @@ const tracker: JupyterFrontEndPlugin<IConsoleTracker> = {
     ILayoutRestorer,
     IFileBrowserFactory,
     IRenderMimeRegistry,
-    ISettingRegistry
+    ISettingRegistry,
+    ITranslator
   ],
   optional: [
     IMainMenu,
@@ -150,12 +153,14 @@ async function activateConsole(
   browserFactory: IFileBrowserFactory,
   rendermime: IRenderMimeRegistry,
   settingRegistry: ISettingRegistry,
+  translator: ITranslator,
   mainMenu: IMainMenu | null,
   palette: ICommandPalette | null,
   launcher: ILauncher | null,
   status: ILabStatus | null,
   sessionDialogs: ISessionContextDialogs | null
 ): Promise<IConsoleTracker> {
+  const trans = translator.load("jupyterlab");
   const manager = app.serviceManager;
   const { commands, shell } = app;
   const category = 'Console';
@@ -354,7 +359,7 @@ async function activateConsole(
   commands.addCommand(command, {
     label: args => {
       if (args['isPalette']) {
-        return 'New Console';
+        return trans.gettext('New Console');
       } else if (args['isLauncher'] && args['kernelPreference']) {
         const kernelPreference = args[
           'kernelPreference'
@@ -365,7 +370,7 @@ async function activateConsole(
             ?.display_name ?? ''
         );
       }
-      return 'Console';
+      return trans.gettext('Console');
     },
     icon: args => (args['isPalette'] ? undefined : consoleIcon),
     execute: args => {
@@ -388,7 +393,7 @@ async function activateConsole(
   }
 
   commands.addCommand(CommandIDs.clear, {
-    label: 'Clear Console Cells',
+    label: trans.gettext('Clear Console Cells'),
     execute: args => {
       const current = getCurrent(args);
       if (!current) {
@@ -400,7 +405,7 @@ async function activateConsole(
   });
 
   commands.addCommand(CommandIDs.runUnforced, {
-    label: 'Run Cell (unforced)',
+    label: trans.gettext('Run Cell (unforced)'),
     execute: args => {
       const current = getCurrent(args);
       if (!current) {
@@ -412,7 +417,7 @@ async function activateConsole(
   });
 
   commands.addCommand(CommandIDs.runForced, {
-    label: 'Run Cell (forced)',
+    label: trans.gettext('Run Cell (forced)'),
     execute: args => {
       const current = getCurrent(args);
       if (!current) {
@@ -424,7 +429,7 @@ async function activateConsole(
   });
 
   commands.addCommand(CommandIDs.linebreak, {
-    label: 'Insert Line Break',
+    label: trans.gettext('Insert Line Break'),
     execute: args => {
       const current = getCurrent(args);
       if (!current) {
@@ -521,7 +526,7 @@ async function activateConsole(
   });
 
   commands.addCommand(CommandIDs.changeKernel, {
-    label: 'Change Kernel…',
+    label: trans.gettext('Change Kernel…'),
     execute: args => {
       const current = getCurrent(args);
       if (!current) {
