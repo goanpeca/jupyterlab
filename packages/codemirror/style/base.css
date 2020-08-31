@@ -11,6 +11,8 @@
   border-radius: 0;
   height: auto;
   /* Changed to auto to autogrow */
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
 }
 
 .CodeMirror pre {
