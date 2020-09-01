@@ -36,6 +36,9 @@
 
 .jp-CodeMirrorEditor {
   cursor: text;
+
+  content-visibility: auto;
+  contain-intrinsic-size: 800px;
 }
 
 .jp-CodeMirrorEditor[data-type='inline'] .CodeMirror-cursor {
