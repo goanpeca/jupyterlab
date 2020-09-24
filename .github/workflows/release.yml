@@ -1,0 +1,46 @@
+name: Create Release Test Workflow
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0} 
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install Conda
+      uses: conda-incubator/setup-miniconda@v1
+      with:
+        auto-update-conda: true
+        auto-activate-base: false
+        activate-environment: jlabrelease_master
+    - name: Prepare release
+      run: |
+        source scripts/release_prep.sh master
+    - name: Bump release
+      run: |
+        jlpm bumpversion release
+    - name: Publish npm packages
+      run: echo "not yet!"
+      # npm run publish:all
+    # - name: Create Release
+    #   id: create_release
+    #   uses: ncipollo/release-action@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   with:
+    #     tag: ${{ github.event.release.tag_name }}
+    #     name: Release ${{ github.event.release.tag_name }}
+    #     artifacts: ${{ env.CURRENT_LOCALE_DIR }}/dist/*
+    #     body: Release ${{ github.event.release.tag_name }}
+    #     token: ${{ secrets.GITHUB_TOKEN }}
+    #     draft: True
+      # twine upload dist/*
+    - name: Push tags and commits
+      run: echo "Not yet!"
+      # git push origin --tags <BRANCH>
