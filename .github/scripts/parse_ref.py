@@ -12,7 +12,7 @@ def parse_ref(current_ref):
     if tag_name.startswith("@release-") and tag_name.count("-") == 2:
         _, release_branch, bumpversion_type = tag_name.split("-")
         # FIXME: Need to handle the patch case?
-        print(f"::set-env name=JLAB_REL_BRANCH::{release_branch}")
+        print(f"::set-env name=JLAB_RELEASE_BRANCH::{release_branch}")
         print(f"::set-env name=BUMP2VERSION_RELEASE_TYPE::{bumpversion_type}")
 
 
