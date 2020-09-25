@@ -28,7 +28,7 @@ jupyter labextension install jupyter-leaflet --no-build
 jupyter lab clean
 
 conda install --override-channels --strict-channel-priority -c conda-forge -c anaconda -y ipywidgets altair matplotlib vega_datasets
-jupyter lab build && python -m jupyterlab.browser_check && jupyter lab
+# jupyter lab build && python -m jupyterlab.browser_check && jupyter lab
 
 # undo our environment changes just in case we are sourcing this script
 conda deactivate

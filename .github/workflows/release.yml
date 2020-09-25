@@ -13,26 +13,38 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.8'
+    - name: Prepare environment variables
+      run: |
+        python .github/scripts/parse_ref.py
     - name: Install Conda
       uses: conda-incubator/setup-miniconda@v1
       with:
         auto-update-conda: true
         auto-activate-base: false
-        activate-environment: jlabrelease_master
+        activate-environment: "jlabrelease_$JLAB_REL_BRANCH"
+    # See https://github.com/marketplace/actions/install-ssh-key
     - name: Install SSH key
       uses: shimataro/ssh-key-action@v2
       with:
+        # Create a key with the jupyterlab-bot
         key: ${{ secrets.SSH_KEY }}
         known_hosts: github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
     - name: Prepare release
       run: |
-        source scripts/release_prep.sh master
+        source scripts/release_prep.sh $JLAB_REL_BRANCH
     - name: Bump release
       run: |
-        jlpm bumpversion release
-    # See https://github.com/marketplace/actions/install-ssh-key
+        cd WORK_DIR
+        jlpm bumpversion $BUMP2VERSION_RELEASE_TYPE
     - name: Publish npm packages
-      run: echo "not yet!"
+      run: |
+        cd WORK_DIR
+        echo "not yet!"
+      # See: https://docs.npmjs.com/using-private-packages-in-a-ci-cd-workflow
       # npm run publish:all
     # - name: Create Release
     #   id: create_release
@@ -46,7 +58,8 @@ jobs:
     #     body: Release ${{ github.event.release.tag_name }}
     #     token: ${{ secrets.GITHUB_TOKEN }}
     #     draft: True
-      # twine upload dist/*
+      # Upload to test PyPI
+      # twine upload --repository testpypi dist/*
     - name: Push tags and commits
       run: echo "Not yet!"
       # git push origin --tags <BRANCH>
