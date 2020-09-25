@@ -10,7 +10,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(HERE))
 
 def get_valid_branches():
     p = subprocess.Popen(
-        ["git", "branch"],
+        ["git", "branch", "-a"],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         cwd=REPO_ROOT,
@@ -18,7 +18,18 @@ def get_valid_branches():
     stdout, stderr = p.communicate()
     stdout = stdout.decode()
     branches = [line.split()[-1] for line in stdout.split("\n") if line]
-    return branches
+    clean_branches = []
+    for branch in branches:
+        if branch.startswith("remotes/upstream/"):
+            new_branch = branch.replace("remotes/upstream/", "")
+        elif branch.startswith("remotes/origin/"):
+            new_branch = branch.replace("remotes/origin/", "")
+        else:
+            new_branch = branch
+
+        clean_branches.append(new_branch)
+
+    return clean_branches
 
 
 def parse_ref(current_ref):
