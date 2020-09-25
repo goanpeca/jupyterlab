@@ -35,14 +35,14 @@ jobs:
         known_hosts: github.com ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAq2A7hRGmdnm9tUDbO9IDSwBK6TbQa+PXYPCPy6rbTrTtw7PHkccKrpp0yVhp5HdEIcKr6pLlVDBfOLX9QUsyCOV0wzfjIJNlGEYsdlLJizHhbn2mUjvSAHQqZETYP81eFzLQNnPHt4EVVUh7VfDESU84KezmD5QlWpXLmvU31/yMf+Se8xhHTvKSCZIFImWwoG6mbUoWf9nzpIoaSjB+weqqUUmpaaasXVal72J+UX2B+2RPW3RcT0eOzQgqlJL3RKrTJvdsjE3JEAvGq3lGHSZXy28G3skua2SmVi/w4yCE6gbODqnTWlg7+wC604ydGXA8VJiS5ap43JXiUFFAaQ==
     - name: Prepare release
       run: |
-        source scripts/release_prep.sh "$JLAB_RELEASE_BRANCH"
+        source scripts/release_prep.sh $JLAB_RELEASE_BRANCH
     - name: Bump release
       run: |
-        cd WORK_DIR
+        cd $RELEASE_WORK_DIR
         jlpm bumpversion $BUMP2VERSION_RELEASE_TYPE
     - name: Publish npm packages
       run: |
-        cd WORK_DIR
+        cd $RELEASE_WORK_DIR
         echo "not yet!"
       # See: https://docs.npmjs.com/using-private-packages-in-a-ci-cd-workflow
       # npm run publish:all

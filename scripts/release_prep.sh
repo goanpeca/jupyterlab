@@ -10,7 +10,7 @@ else
     cd $WORK_DIR
 
     # Needed to persist the env variable among github workflow steps
-    echo "::set-env name=WORK_DIR::$WORK_DIR"
+    echo "::set-env name=RELEASE_WORK_DIR::$WORK_DIR"
 
     conda create --override-channels --strict-channel-priority -c conda-forge -c anaconda -y -n $JLAB_REL_ENV jupyter-packaging nodejs twine
     conda activate $JLAB_REL_ENV
