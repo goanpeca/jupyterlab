@@ -14,7 +14,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        repository: jupyterlab/jupyterlab
+        repository: goanpeca/jupyterlab
         fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v1
@@ -23,6 +23,7 @@ jobs:
     - name: Prepare environment variables
       run: |
         git fetch origin
+        git checkout ci-release-test
         python .github/scripts/parse_ref.py
     - name: Install Conda
       uses: conda-incubator/setup-miniconda@v1
