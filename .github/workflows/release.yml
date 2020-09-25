@@ -38,11 +38,11 @@ jobs:
         source scripts/release_prep.sh $JLAB_RELEASE_BRANCH
     - name: Bump release
       run: |
-        cd $RELEASE_WORK_DIR
+        cd $RELEASE_WORK_DIR/jupyterlab
         jlpm bumpversion $BUMP2VERSION_RELEASE_TYPE
     - name: Publish npm packages
       run: |
-        cd $RELEASE_WORK_DIR
+        cd $RELEASE_WORK_DIR/jupyterlab
         echo "not yet!"
       # See: https://docs.npmjs.com/using-private-packages-in-a-ci-cd-workflow
       # npm run publish:all
@@ -61,5 +61,6 @@ jobs:
       # Upload to test PyPI
       # twine upload --repository testpypi dist/*
     - name: Push tags and commits
-      run: echo "Not yet!"
-      # git push origin --tags <BRANCH>
+      run: |
+        echo "Not yet!"
+      # git push origin --tags $JLAB_RELEASE_BRANCH

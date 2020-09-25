@@ -13,6 +13,8 @@ TEST_DIR=$(mktemp -d -t $JLAB_TEST_ENV)
 conda create --override-channels --strict-channel-priority -c conda-forge -c anaconda -y -n "$JLAB_TEST_ENV" notebook nodejs twine
 conda activate "$JLAB_TEST_ENV"
 
+# FIXME:
+# pip install jupyterlab --pre --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple
 pip install dist/*.whl
 
 cp examples/notebooks/*.ipynb $TEST_DIR/
