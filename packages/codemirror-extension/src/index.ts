@@ -240,12 +240,12 @@ function activateEditorCommands(
       if (widget.content.editor instanceof CodeMirrorEditor) {
         const { editor } = widget.content;
         editor.setOption('keyMap', keyMap);
-        editor.setOption('lineWiseCopyCut', lineWiseCopyCut);
-        editor.setOption('scrollPastEnd', scrollPastEnd);
-        editor.setOption('selectionPointer', selectionPointer);
-        editor.setOption('styleActiveLine', styleActiveLine);
-        editor.setOption('styleSelectedText', styleSelectedText);
-        editor.setOption('theme', theme);
+        // editor.setOption('lineWiseCopyCut', lineWiseCopyCut);
+        // editor.setOption('scrollPastEnd', scrollPastEnd);
+        // editor.setOption('selectionPointer', selectionPointer);
+        // editor.setOption('styleActiveLine', styleActiveLine);
+        // editor.setOption('styleSelectedText', styleSelectedText);
+        // editor.setOption('theme', theme);
       }
     });
   }
@@ -270,14 +270,14 @@ function activateEditorCommands(
    */
   tracker.widgetAdded.connect((sender, widget) => {
     if (widget.content.editor instanceof CodeMirrorEditor) {
-      const { editor } = widget.content;
-      editor.setOption('keyMap', keyMap);
-      editor.setOption('lineWiseCopyCut', lineWiseCopyCut);
-      editor.setOption('selectionPointer', selectionPointer);
-      editor.setOption('scrollPastEnd', scrollPastEnd);
-      editor.setOption('styleActiveLine', styleActiveLine);
-      editor.setOption('styleSelectedText', styleSelectedText);
-      editor.setOption('theme', theme);
+      // const { editor } = widget.content;
+      // editor.setOption('keyMap', keyMap);
+      // editor.setOption('lineWiseCopyCut', lineWiseCopyCut);
+      // editor.setOption('selectionPointer', selectionPointer);
+      // editor.setOption('scrollPastEnd', scrollPastEnd);
+      // editor.setOption('styleActiveLine', styleActiveLine);
+      // editor.setOption('styleSelectedText', styleSelectedText);
+      // editor.setOption('theme', theme);
     }
   });
 

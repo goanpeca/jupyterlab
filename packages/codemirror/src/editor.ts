@@ -309,6 +309,22 @@ export class CodeMirrorEditor implements CodeEditor.IEditor {
   }
 
   /**
+   * Set config options for the editor.
+   */
+  setOptions(
+    options: any
+  ): void {
+    this.editor.startOperation()
+    this.editor.operation(() => {
+    let value: any;
+      for (let option in options) {
+        Private.setOption(this.editor, option as any, value, this._config);
+        }
+    });
+    this.editor.endOperation();
+  }
+
+  /**
    * Returns the content for the given line number.
    */
   getLine(line: number): string | undefined {

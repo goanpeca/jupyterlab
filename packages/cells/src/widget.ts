@@ -214,11 +214,11 @@ export class Cell<T extends ICellModel = ICellModel> extends Widget {
 
     // Editor settings
     if (options.editorConfig) {
-      Object.keys(options.editorConfig).forEach(
-        (key: keyof CodeEditor.IConfig) => {
-          this.editor.setOption(key, options.editorConfig?.[key] ?? null);
-        }
-      );
+      // Object.keys(options.editorConfig).forEach(
+      //   (key: keyof CodeEditor.IConfig) => {
+      //     this.editor.setOption(key, options.editorConfig?.[key] ?? null);
+      //   }
+      // );
     }
 
     model.metadata.changed.connect(this.onMetadataChanged, this);
