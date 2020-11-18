@@ -699,7 +699,14 @@ export class CodeMirrorEditor implements CodeEditor.IEditor {
    * Handles a mime type change.
    */
   private _onMimeTypeChanged(): void {
+    // Skip the first call
+    if (this._testing === false) {
+      this._testing = true;
+      return
+    }
+
     const mime = this._model.mimeType;
+    console.log("_onMimeTypeChanged", mime)
     const editor = this._editor;
     // TODO: should we provide a hook for when the
     // mode is done being set?
@@ -715,6 +722,7 @@ export class CodeMirrorEditor implements CodeEditor.IEditor {
       delete extraKeys['Backspace'];
     }
     editor.setOption('extraKeys' as any, extraKeys);
+    
   }
 
   /**
@@ -1097,6 +1105,7 @@ export class CodeMirrorEditor implements CodeEditor.IEditor {
     );
   }
 
+  private _testing: boolean = false;
   protected translator: ITranslator;
   private _trans: TranslationBundle;
   private _model: CodeEditor.IModel;
